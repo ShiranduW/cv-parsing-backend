@@ -1,7 +1,9 @@
 // 1. Load libraries.
 const express = require('express')
 const multer = require('multer')
-const pdfParse = require('pdf-parse')
+// Got an error! , Because according to way imported pdfParse returns an object, not a function directly.
+// Then try new package pdf2json.
+const PDFParser = require('pdf2json')
 const mammoth = require('mammoth')
 
 // 2. create router object.
@@ -40,9 +42,32 @@ const upload = multer({
 // returns plain text string
 const extractText = async (file) => {
   if (file.mimetype === 'application/pdf') {
-    // pdf-parse reads the buffer directly
-    const data = await pdfParse(file.buffer)
-    return data.text
+
+    // pdf2json uses events, so we wrap it in a Promise
+    return new Promise((resolve, reject) => {
+      const parser = new PDFParser()
+
+      // when parsing is done
+      parser.on('pdfParser_dataReady', (data) => {
+        // extract text from all pages
+        const text = data.Pages
+          .map(page =>
+            page.Texts
+              .map(t => decodeURIComponent(t.R[0].T))
+              .join(' ')
+          )
+          .join('\n')
+        resolve(text)
+      })
+
+      // when parsing fails
+      parser.on('pdfParser_dataError', (err) => {
+        reject(new Error(err.parserError))
+      })
+
+      // parse the buffer directly
+      parser.parseBuffer(file.buffer)
+    })
 
   } else {
     // mammoth reads DOCX buffer
