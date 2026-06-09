@@ -5,6 +5,9 @@ const multer = require('multer')
 // Then try new package pdf2json.
 const PDFParser = require('pdf2json')
 const mammoth = require('mammoth')
+// Import Gemini functions.
+const { parseCV, generateEmbedding } = require('../lib/gemini')
+const { saveCandidate } = require('../lib/mongo')
 
 // 2. create router object.
 // like a mini server for this file.
@@ -98,23 +101,46 @@ router.post('/', upload.single('cv'), async (req, res) => {
       return res.status(400).json({ message: 'CV file is required' })
     }
 
-    // Call the helper function to extract the text from the CV file.
+    // ── Step 1 — call the helper function to extract the text from the CV file ──
+    console.log('Extracting text...')
     const cvText = await extractText(file)
+    console.log('Text extracted. Length:', cvText.length)
 
-    // log to confirm it works — remove later
-    console.log('---- CV TEXT EXTRACTED ----')
-    console.log(cvText.slice(0, 300)) // first 300 characters
-    console.log('---------------------------')
+    // ── Step 2 — parse CV with Gemini ──
+    console.log('Parsing CV with Gemini...')
+    const parsed = await parseCV(cvText)
+    console.log('CV parsed successfully')
 
-    // temporary response — will replace in Step 10
+    // ── Step 3 — generate embedding from Gemini ──
+    console.log('Generating embedding...')
+    const embedding = await generateEmbedding(cvText)
+    console.log('Embedding generated. Length:', embedding.length)
+
+    // ── Step 4 — save to MongoDB ──
+    console.log('Saving to MongoDB...')
+    const candidate = await saveCandidate({
+      name,
+      email,
+      phone,
+      parsed,
+      cv_text: cvText,
+      embedding
+    })
+    console.log('Saved to MongoDB. ID:', candidate._id)
+
+    // ── Step 5 — send success response ──
     res.json({
-      message: 'CV text extracted successfully',
-      preview: cvText.slice(0, 300)
+      message: 'CV submitted successfully',
+      candidate: {
+        id: candidate._id,
+        name: candidate.name,
+        email: candidate.email,
+        parsed: candidate.parsed
+      }
     })
 
-    // if any of the above fails, this will run.
   } catch (err) {
-    console.error('Submit error:', err)
+    console.error('Submit error:', err.message)
     res.status(500).json({ message: err.message })
   }
 })

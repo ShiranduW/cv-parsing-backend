@@ -6,6 +6,8 @@ const dotenv = require('dotenv')
 // 2. load .env variables.
 dotenv.config()
 
+const { connectDB } = require('./lib/mongo')
+
 // 3. Load route fils - Node.js opens routes/submit.js and runs it.
 // submitRoute now holds that router object.
 const submitRoute = require('./routes/submit')
@@ -37,6 +39,9 @@ const PORT = process.env.PORT || 5000
 
 // Opens port 5000 on your computer and starts accepting incoming requests.
 // This callback function runs once when the server is ready.
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+// ADD connectDB() BEFORE app.listen
+connectDB().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+  })
 })

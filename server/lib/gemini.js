@@ -1,12 +1,11 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai')
 
+// ---------1. Create client with API key ---------
 // initialize Gemini with API key from .env
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
 
-// ─────────────────────────────────────────
 // helper — wait for ms milliseconds
 // used for retry delay
-// ─────────────────────────────────────────
 const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
 // ─────────────────────────────────────────
@@ -14,8 +13,9 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 // ─────────────────────────────────────────
 const parseCV = async (cvText, retries = 3) => {
   try {
-    // gemini-1.5-flash — free tier, fast, good for extraction
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.0-pro' })
+    // ---------2. Get a model ---------
+    // gemini-2.5-flash — free tier, fast, good for extraction
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
 
     const prompt = `
       You are a CV parser. Extract information from the CV text below.
@@ -59,8 +59,10 @@ const parseCV = async (cvText, retries = 3) => {
       CV Text:
       ${cvText}
     `
-
+    // ---------3. Call generateContent ---------
     const result = await model.generateContent(prompt)
+    // console.log(JSON.stringify(result, null, 2))
+    // ---------4. Get text from result ---------
     const responseText = result.response.text()
 
     // Gemini sometimes wraps JSON in markdown code blocks
@@ -102,15 +104,18 @@ const parseCV = async (cvText, retries = 3) => {
 // ─────────────────────────────────────────
 const generateEmbedding = async (cvText, retries = 3) => {
   try {
+    // ---------2.2. Get a model ---------
     // text-embedding-004 — Gemini free embedding model
     // converts text into 768 numbers representing meaning
-    const model = genAI.getGenerativeModel({ model: 'text-embedding-004' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-embedding-001' })
 
+    // ---------2.3. Call generateContent ---------
     // embeddings work best on shorter text
     // slice to first 2000 characters — captures the important parts
     // sending the full CV wastes tokens
     const result = await model.embedContent(cvText.slice(0, 2000))
 
+    // ---------2.4. Get text from result ---------
     // result.embedding.values is the array of 768 numbers
     return result.embedding.values
 
@@ -125,4 +130,5 @@ const generateEmbedding = async (cvText, retries = 3) => {
   }
 }
 
+// Export both functions.
 module.exports = { parseCV, generateEmbedding }
