@@ -6,7 +6,7 @@ const dotenv = require('dotenv')
 // 2. load .env variables.
 dotenv.config()
 
-const { connectDB } = require('./lib/mongo')
+const { connectDB } = require('./config/db.js')
 
 // 3. Load route fils - Node.js opens routes/submit.js and runs it.
 // submitRoute now holds that router object.

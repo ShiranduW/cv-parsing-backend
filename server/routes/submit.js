@@ -6,8 +6,8 @@ const multer = require('multer')
 const PDFParser = require('pdf2json')
 const mammoth = require('mammoth')
 // Import Gemini functions.
-const { parseCV, generateEmbedding } = require('../lib/gemini')
-const { saveCandidate } = require('../lib/mongo')
+const { parseCV, generateEmbedding } = require('../services/gemini.js')
+const { saveCandidate } = require('../services/candidate.js')
 
 // 2. create router object.
 // like a mini server for this file.
