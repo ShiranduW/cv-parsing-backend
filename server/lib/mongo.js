@@ -40,12 +40,25 @@ const candidateSchema = new mongoose.Schema({
 })
 
 // 2. Converting Candidate Schema to a Mongoose Model.
+// This is how we can use Mongoose to interact with MongoDB.
+// Model means "collection" in MongoDB.
+// Candidate is Class. because of that we do capitalize first letter.
+
+// Mongoose automatically ('candidates') converts:
+// 1. lowercases it  → 'candidate'
+// 2. pluralizes it  → 'candidates'
+// 3. uses that as collection name in MongoDB. 
 const Candidate = mongoose.model('Candidate', candidateSchema)
 
 // 4. Save a candidate to MongoDB.
 // Function 1 — save a candidate to MongoDB
 const saveCandidate = async (data) => {
+  // create a new Candidate document.
+  // data is an object with name, email, phone, parsed, cv_text, embedding. This is from the submit route.
+  // 4.1. creates the object in MEMORY only.
   const candidate = new Candidate(data)
+  // NOW sends to MongoDB.
+  // 4.2. actually writes to database.
   await candidate.save()
   return candidate
 }

@@ -11,6 +11,8 @@ const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 // ─────────────────────────────────────────
 // Function 1 — parse CV text into structured JSON
 // ─────────────────────────────────────────
+// When Gemini is busy or rate limited, instead of crashing immediately,
+// Wait 10 seconds and try again. Up to 3 times.
 const parseCV = async (cvText, retries = 3) => {
   try {
     // ---------2. Get a model ---------
@@ -79,11 +81,12 @@ const parseCV = async (cvText, retries = 3) => {
     return parsed
 
   } catch (err) {
-    // 429 means rate limited — too many requests
+    // 429: too many requests (rate limited)
     // wait 10 seconds and try again
     if (err.status === 429 && retries > 0) {
       console.log(`Rate limited. Waiting 10s. Retries left: ${retries}`)
-      await wait(10000)
+      await wait(30000)
+      // If Gemini returns a 429 error, the function literally executes itself again - RECURSION!
       return parseCV(cvText, retries - 1)
     }
 

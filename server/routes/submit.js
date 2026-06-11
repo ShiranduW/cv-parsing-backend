@@ -46,11 +46,13 @@ const upload = multer({
 const extractText = async (file) => {
   if (file.mimetype === 'application/pdf') {
 
-    // pdf2json uses events, so we wrap it in a Promise
+    // pdf2json 
+    // uses events(.on), so we wrap it in a Promise
     return new Promise((resolve, reject) => {
       const parser = new PDFParser()
 
-      // when parsing is done
+      // 1. Set up listeners first
+      // 3.1 when parsing is done
       parser.on('pdfParser_dataReady', (data) => {
         // extract text from all pages
         const text = data.Pages
@@ -63,12 +65,13 @@ const extractText = async (file) => {
         resolve(text)
       })
 
-      // when parsing fails
+      // 3.2 when parsing fails
       parser.on('pdfParser_dataError', (err) => {
         reject(new Error(err.parserError))
       })
 
-      // parse the buffer directly
+      // 2. Set up listeners first as above, THEN start parsing.
+      // Tells pdf2json to start reading the PDF bytes from the buffer
       parser.parseBuffer(file.buffer)
     })
 
@@ -118,6 +121,8 @@ router.post('/', upload.single('cv'), async (req, res) => {
 
     // ── Step 4 — save to MongoDB ──
     console.log('Saving to MongoDB...')
+    // saveCandidate() is defined in lib/mongo.js.
+    // sends data to MongoDB.
     const candidate = await saveCandidate({
       name,
       email,
