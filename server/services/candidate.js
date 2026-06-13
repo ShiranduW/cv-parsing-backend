@@ -13,4 +13,31 @@ const saveCandidate = async (data) => {
   return candidate
 }
 
-module.exports = { saveCandidate }
+// 1. Implement vector search in MongoDB -Find similar CVs.
+const vectorSearch = async (queryEmbedding) => {
+  const results = await Candidate.aggregate([
+    // 1.1 Find similar embeddings.
+    {
+      $vectorSearch: {
+        index: 'vector_index',
+        path: 'embedding', // look in this field
+        queryVector: queryEmbedding, // compare against this
+        numCandidates: 20, // // consider top 20
+        limit: 3 // // return only top 3
+      }
+    },
+    // 1.2 Pick which fields to return.
+    {
+      $project: {
+        name: 1,
+        email: 1,
+        parsed: 1,
+        cv_text: 1,
+        score: { $meta: 'vectorSearchScore' }
+      }
+    }
+  ])
+  return results
+}
+
+module.exports = { saveCandidate, vectorSearch }

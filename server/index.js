@@ -11,6 +11,7 @@ const { connectDB } = require('./config/db.js')
 // 3. Load route fils - Node.js opens routes/submit.js and runs it.
 // submitRoute now holds that router object.
 const submitRoute = require('./routes/submit')
+const searchRoute = require('./routes/search')
 
 // 4. create server object.
 const app = express()
@@ -26,6 +27,7 @@ app.use(express.json())
 // 7. Connect routes to server.
 // Telling the server what to do when do this.
 app.use('/api/submit', submitRoute)
+app.use('/api/search', searchRoute)
 
 // test route — confirm server is running.
 // Like send a response to the client.
