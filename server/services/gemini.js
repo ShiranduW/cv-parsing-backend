@@ -133,5 +133,33 @@ const generateEmbedding = async (cvText, retries = 3) => {
   }
 }
 
+const answerQuery = async (query, matches) => {
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+
+    // Build context from matched CVs. 
+    // "matches" can not pass driectly to prompt, Gemini cannot receive JS OBJECT.
+    // So we need to convert JS OBJECT to string.
+    // so we take cv_text from each match.
+    const context = matches
+    .map((m,i) => `Candidate ${i + 1} — ${m.name}:\n${m.cv_text}`)
+    .join('\n\n---\n\n')
+
+    const prompt = `
+    You are a recruitment assistant.
+    Answer the recruiter query using ONLY the candidate CVs below.
+    Do not use outside knowledge.
+    Mention candidate names and specific details from their CVs.
+
+    Recruiter query: ${query}
+
+    Candidate CVs:
+    ${context}
+  `
+    const result = await model.generateContent(prompt)
+    const responseText = result.response.text()
+
+    return responseText
+  }
+
 // Export both functions.
-module.exports = { parseCV, generateEmbedding }
+module.exports = { parseCV, generateEmbedding, answerQuery }

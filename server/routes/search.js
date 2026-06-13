@@ -1,6 +1,7 @@
 const express = require('express')
 const { generateEmbedding } = require('../services/gemini.js')
 const { vectorSearch } = require('../services/candidate.js')
+const { answerQuery } = require('../services/gemini.js')
 
 const router = express.Router()
 
@@ -22,9 +23,19 @@ router.post('/', async (req, res) => {
     const matches = await vectorSearch(queryEmbedding)
     console.log('Matches found:', matches.length)
 
-    // return matches only — no Gemini yet
+    // step 3 — get answer from Gemini.
+    // Pass query and matches to Gemini.
+    const answer = await answerQuery(query, matches)
+    
+    // return matches only
     res.json({
-      matches
+      answer,
+      candidates: matches.map(c => ({
+      name: c.name,
+      email: c.email,
+      score: c.score,
+      parsed: c.parsed
+      }))
     })
 
   } catch (err) {
