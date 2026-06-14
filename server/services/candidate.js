@@ -31,6 +31,7 @@ const vectorSearch = async (queryEmbedding) => {
       $project: {
         name: 1,
         email: 1,
+        phone: 1,
         parsed: 1,
         cv_text: 1,
         score: { $meta: 'vectorSearchScore' }

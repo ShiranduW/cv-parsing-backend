@@ -33,6 +33,7 @@ router.post('/', async (req, res) => {
       candidates: matches.map(c => ({
       name: c.name,
       email: c.email,
+      phone: c.phone,
       score: c.score,
       parsed: c.parsed
       }))
